@@ -169,14 +169,20 @@ fun AccompanistWebView(
 
     AndroidView(
         factory = { context ->
-            (factory?.invoke(context) ?: WebView(context))
+            val reused = state.retainNativeWebView && state.retainedView.value != null
+            val native = if (state.retainNativeWebView) {
+                state.attachRetainedAndroidView(context) { factory?.invoke(context) ?: WebView(context) }
+            } else {
+                factory?.invoke(context) ?: WebView(context)
+            }
+            native
                 .apply {
                     onCreated(this)
 
                     this.layoutParams = layoutParams
 
-                    state.viewState?.let {
-                        this.restoreState(it)
+                    if (!reused) {
+                        state.viewState?.let { this.restoreState(it) }
                     }
 
                     chromeClient.context = context
@@ -248,12 +254,32 @@ fun AccompanistWebView(
                     val androidWebView = AndroidWebView(it, scope, webViewJsBridge)
                     state.webView = androidWebView
                     webViewJsBridge?.webView = androidWebView
+                    if (reused) {
+                        it.onResume()
+                        state.lastLoadedUrl = it.url
+                        state.pageTitle = it.title
+                        state.loadingState = if (it.progress >= 100) LoadingState.Finished
+                            else LoadingState.Loading(it.progress / 100f)
+                        navigator.canGoBack = it.canGoBack()
+                        navigator.canGoForward = it.canGoForward()
+                    }
                 }
         },
         modifier = modifier,
         onReset = {},
         onRelease = {
+            if (state.webView?.webView === it) state.webView = null
+            if (webViewJsBridge?.webView?.webView === it) webViewJsBridge.webView = null
             onDispose(it)
+            if (state.retainNativeWebView && state.retainedView.value === it) {
+                it.onPause()
+                it.webChromeClient = null
+                it.webViewClient = WebViewClient()
+                it.removeJavascriptInterface("androidJsBridge")
+                state.retainedView.detach(it)
+            } else {
+                state.contentLoads.forget(it)
+            }
         },
     )
 }

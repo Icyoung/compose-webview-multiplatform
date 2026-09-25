@@ -89,7 +89,9 @@ fun WebView(
         // Handle content loading for all platforms
         LaunchedEffect(wv, state) {
             snapshotFlow { state.content }.collect { content ->
-                wv.loadContent(content)
+                state.contentLoads.load(wv.webView, content) {
+                    wv.loadContent(content)
+                }
             }
         }
 

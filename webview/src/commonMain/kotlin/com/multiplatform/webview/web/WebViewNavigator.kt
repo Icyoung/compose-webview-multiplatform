@@ -10,7 +10,8 @@ import androidx.compose.runtime.setValue
 import com.multiplatform.webview.request.RequestInterceptor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -113,19 +114,19 @@ class WebViewNavigator(
     }
 
     /**
-     * A [MutableSharedFlow] of [NavigationEvent]s that is used to communicate navigation events
+     * A queue of [NavigationEvent]s that is used to communicate navigation events
      * from the composable to the [IWebView].
      */
-    private val navigationEvents: MutableSharedFlow<NavigationEvent> = MutableSharedFlow(replay = 1)
+    private val navigationEvents = Channel<NavigationEvent>(Channel.UNLIMITED)
 
     /**
      * Handles navigation events from the composable and calls the appropriate method on the
      * [IWebView].
      * Use Dispatchers.Main to ensure that the webview methods are called on UI thread
      */
-    internal suspend fun IWebView.handleNavigationEvents(): Nothing =
+    internal suspend fun IWebView.handleNavigationEvents(): Unit =
         withContext(Dispatchers.Main) {
-            navigationEvents.collect { event ->
+            navigationEvents.receiveAsFlow().collect { event ->
                 when (event) {
                     is NavigationEvent.Back -> goBack()
                     is NavigationEvent.Forward -> goForward()
@@ -181,7 +182,7 @@ class WebViewNavigator(
         additionalHttpHeaders: Map<String, String> = emptyMap(),
     ) {
         coroutineScope.launch {
-            navigationEvents.emit(
+            navigationEvents.send(
                 NavigationEvent.LoadUrl(
                     url,
                     additionalHttpHeaders,
@@ -207,7 +208,7 @@ class WebViewNavigator(
         historyUrl: String? = null,
     ) {
         coroutineScope.launch {
-            navigationEvents.emit(
+            navigationEvents.send(
                 NavigationEvent.LoadHtml(
                     html,
                     baseUrl,
@@ -224,7 +225,7 @@ class WebViewNavigator(
         readType: WebViewFileReadType = WebViewFileReadType.ASSET_RESOURCES,
     ) {
         coroutineScope.launch {
-            navigationEvents.emit(
+            navigationEvents.send(
                 NavigationEvent.LoadHtmlFile(
                     fileName,
                     readType,
@@ -244,7 +245,7 @@ class WebViewNavigator(
         postData: ByteArray,
     ) {
         coroutineScope.launch {
-            navigationEvents.emit(
+            navigationEvents.send(
                 NavigationEvent.PostUrl(
                     url,
                     postData,
@@ -264,7 +265,7 @@ class WebViewNavigator(
         callback: ((String) -> Unit)? = null,
     ) {
         coroutineScope.launch {
-            navigationEvents.emit(
+            navigationEvents.send(
                 NavigationEvent.EvaluateJavaScript(
                     script,
                     callback,
@@ -277,28 +278,28 @@ class WebViewNavigator(
      * Navigates the webview back to the previous page.
      */
     fun navigateBack() {
-        coroutineScope.launch { navigationEvents.emit(NavigationEvent.Back) }
+        coroutineScope.launch { navigationEvents.send(NavigationEvent.Back) }
     }
 
     /**
      * Navigates the webview forward after going back from a page.
      */
     fun navigateForward() {
-        coroutineScope.launch { navigationEvents.emit(NavigationEvent.Forward) }
+        coroutineScope.launch { navigationEvents.send(NavigationEvent.Forward) }
     }
 
     /**
      * Reloads the current page in the webview.
      */
     fun reload() {
-        coroutineScope.launch { navigationEvents.emit(NavigationEvent.Reload) }
+        coroutineScope.launch { navigationEvents.send(NavigationEvent.Reload) }
     }
 
     /**
      * Stops the current page load (if one is loading).
      */
     fun stopLoading() {
-        coroutineScope.launch { navigationEvents.emit(NavigationEvent.StopLoading) }
+        coroutineScope.launch { navigationEvents.send(NavigationEvent.StopLoading) }
     }
 }
 

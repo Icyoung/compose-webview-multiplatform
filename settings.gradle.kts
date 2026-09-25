@@ -19,7 +19,9 @@ dependencyResolutionManagement {
 }
 
 include(":webview")
-include(":sample:androidApp")
-include(":sample:desktopApp")
-include(":sample:wasmJsApp")
-include(":sample:shared")
+if (providers.gradleProperty("webview.samples").orNull == "true") {
+    include(":sample:androidApp")
+    include(":sample:desktopApp")
+    include(":sample:wasmJsApp")
+    include(":sample:shared")
+}

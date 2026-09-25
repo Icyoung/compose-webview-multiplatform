@@ -27,7 +27,26 @@ import com.multiplatform.webview.util.isZero
  */
 class WebViewState(
     webContent: WebContent,
+    /**
+     * Keep the Android/iOS native view when its Composable leaves composition.
+     * Retain this state in a navigation-entry owner and call [dispose] when that entry is removed.
+     * This retains an in-memory document; it does not survive process death.
+     */
+    val retainNativeWebView: Boolean = false,
 ) {
+    internal val retainedView = RetainedView<NativeWebView>()
+    internal val contentLoads = WebViewContentLoadState<NativeWebView>()
+
+    /** Release an opted-in retained view. Must be called on the UI thread; safe to repeat. */
+    fun dispose() {
+        retainedView.dispose()
+    }
+
+    internal fun forgetNativeView(native: NativeWebView) {
+        if (webView?.webView === native) webView = null
+        contentLoads.forget(native)
+    }
+
     /**
      * The last loaded url. This is updated when a new page is loaded.
      */

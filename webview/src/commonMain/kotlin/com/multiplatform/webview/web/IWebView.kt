@@ -176,6 +176,7 @@ interface IWebView {
         }
         val initJs =
             """
+            if (!window.$jsBridgeName || typeof window.$jsBridgeName.callNative !== 'function') {
             window.$jsBridgeName = {
                 callbacks: {},
                 callbackId: 0,
@@ -200,6 +201,7 @@ interface IWebView {
                     }
                 }
             };
+            }
             """.trimIndent()
         evaluateJavaScript(initJs)
     }

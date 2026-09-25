@@ -67,6 +67,11 @@ kotlin {
             implementation(libs.kotlin.serialization.json)
         }
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+        }
+
         androidMain.dependencies {
             api(libs.android.activity.compose)
             api(libs.android.webkit)

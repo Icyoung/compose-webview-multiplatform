@@ -115,11 +115,27 @@ fun IOSWebView(
                         forKey = "allowUniversalAccessFromFileURLs",
                     )
                 }
-            factory(WebViewFactoryParam(config))
+            val reused = state.retainNativeWebView && state.retainedView.value != null
+            val native = if (state.retainNativeWebView) {
+                state.retainedView.attach(
+                    create = { factory(WebViewFactoryParam(config)) },
+                    release = {
+                        state.forgetNativeView(it)
+                        it.stopLoading()
+                        it.navigationDelegate = null
+                        it.UIDelegate = null
+                        it.configuration.userContentController.removeScriptMessageHandlerForName("iosJsBridge")
+                        it.removeFromSuperview()
+                    },
+                )
+            } else {
+                factory(WebViewFactoryParam(config))
+            }
+            native
                 .apply {
                     onCreated(this)
-                    state.viewState?.let {
-                        this.interactionState = it
+                    if (!reused) {
+                        state.viewState?.let { this.interactionState = it }
                     }
                     allowsBackForwardNavigationGestures = captureBackPresses
                     customUserAgent = state.webSettings.customUserAgentString
@@ -172,6 +188,14 @@ fun IOSWebView(
                     val iosWebView = IOSWebView(it, scope, webViewJsBridge)
                     state.webView = iosWebView
                     webViewJsBridge?.webView = iosWebView
+                    if (reused) {
+                        state.lastLoadedUrl = it.URL?.absoluteString
+                        state.pageTitle = it.title
+                        state.loadingState = if (it.loading) LoadingState.Loading(it.estimatedProgress.toFloat())
+                            else LoadingState.Finished
+                        navigator.canGoBack = it.canGoBack
+                        navigator.canGoForward = it.canGoForward
+                    }
                 }
         },
         modifier = modifier,
@@ -181,7 +205,11 @@ fun IOSWebView(
                 observer = observer,
             )
             it.navigationDelegate = null
+            it.configuration.userContentController.removeScriptMessageHandlerForName("iosJsBridge")
+            if (webViewJsBridge?.webView?.webView === it) webViewJsBridge.webView = null
             onDispose(it)
+            if (state.retainNativeWebView) state.retainedView.detach(it)
+            else state.contentLoads.forget(it)
         },
         properties =
             UIKitInteropProperties(
