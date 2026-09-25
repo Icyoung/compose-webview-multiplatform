@@ -18,6 +18,10 @@ plugins {
 group = providers.gradleProperty("GROUP").get()
 version = providers.gradleProperty("VERSION_NAME").get()
 
+compose.resources {
+    packageOfResClass = "compose_webview_multiplatform.webview.generated.resources"
+}
+
 kotlin {
 //    explicitApi = ExplicitApiMode.Strict
     applyDefaultHierarchyTemplate()

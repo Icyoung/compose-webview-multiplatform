@@ -26,7 +26,7 @@ internal fun WebViewState.attachRetainedAndroidView(context: Context, factory: (
             forgetNativeView(native)
             (native.parent as? ViewGroup)?.removeView(native)
             native.stopLoading()
-            native.removeJavascriptInterface("androidJsBridge")
+            native.disposeJsBridge()
             native.destroy()
         },
     )

@@ -1,0 +1,3 @@
+<resources>
+    <item name="retained_webview_js_bridge" type="id" />
+</resources>

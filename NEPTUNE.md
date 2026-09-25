@@ -20,7 +20,10 @@ Process death and Activity recreation may therefore require a fresh load.
 
 On temporary removal, platform callbacks and JS bridge handlers are detached;
 on return they are rebound to the current composition. The JS bridge preserves
-its in-page callback registry. Declarative content loads are deduplicated by
+its in-page callback registry. Android keeps a stable injected interface and
+switches its handler target on the UI thread: `addJavascriptInterface` replacement
+only becomes visible after a page reload, so replacing the injected object on
+return would leave the live page calling the old handler. Declarative content loads are deduplicated by
 native instance identity and content. Explicit navigator commands still run,
 but are queued rather than replayed when a collector restarts.
 

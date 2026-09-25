@@ -121,7 +121,7 @@ class AndroidWebView(
     }
 
     override fun initJsBridge(webViewJsBridge: WebViewJsBridge) {
-        webView.addJavascriptInterface(this, "androidJsBridge")
+        webView.bindJsBridge(webViewJsBridge)
     }
 
     @JavascriptInterface

@@ -275,9 +275,10 @@ fun AccompanistWebView(
                 it.onPause()
                 it.webChromeClient = null
                 it.webViewClient = WebViewClient()
-                it.removeJavascriptInterface("androidJsBridge")
+                it.unbindJsBridge(webViewJsBridge)
                 state.retainedView.detach(it)
             } else {
+                it.unbindJsBridge(webViewJsBridge)
                 state.contentLoads.forget(it)
             }
         },
