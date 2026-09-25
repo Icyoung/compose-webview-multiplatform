@@ -67,7 +67,7 @@ kotlin {
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.tabNavigator)
 
-            api(project(":webview"))
+            api(project(":compose-webview-multiplatform"))
         }
 
         commonTest.dependencies {

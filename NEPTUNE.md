@@ -30,4 +30,6 @@ DOM or JS heap, so this opt-in retains the native renderer in memory.
 
 Build tooling matches Neptune (AGP 8.13.2, Kotlin 2.3.0, Compose 1.9.3) for Gradle
 source dependency compatibility. Samples are opt-in with `-Pwebview.samples=true`.
-Common lifecycle/load/navigation regression tests run via `:webview:desktopTest`.
+Common lifecycle/load/navigation regression tests run via
+`:compose-webview-multiplatform:desktopTest`. The project name and group match
+the dependency coordinates so Gradle source dependency discovery can resolve it.

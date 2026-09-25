@@ -1,4 +1,4 @@
-rootProject.name = "compose-webview-multiplatform"
+rootProject.name = "compose-webview-build"
 
 pluginManagement {
     repositories {
@@ -19,6 +19,7 @@ dependencyResolutionManagement {
 }
 
 include(":webview")
+project(":webview").name = "compose-webview-multiplatform"
 if (providers.gradleProperty("webview.samples").orNull == "true") {
     include(":sample:androidApp")
     include(":sample:desktopApp")

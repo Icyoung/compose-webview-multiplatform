@@ -15,6 +15,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+group = providers.gradleProperty("GROUP").get()
+version = providers.gradleProperty("VERSION_NAME").get()
+
 kotlin {
 //    explicitApi = ExplicitApiMode.Strict
     applyDefaultHierarchyTemplate()
